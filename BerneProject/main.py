@@ -1,88 +1,9 @@
-import csv
-import pandas as pd
-import tkinter as tk
-import matplotlib as mpl
+from ModuleDataUsefull.GestionDB import *
+from ModuleDataUsefull.TraitementData import *
 
+TD = TraitementData("BerneProject/extraction-2021-2022-anonyme.csv")
+TD.lire_fichier_csv()
+df = TD.traitementDateDuree()
 
-class TraitementData:
-
-    def __init__(self) :
-        self.df = None
-        self.nom_fichier = "Projet\extraction-2021-2022-anonyme.csv"
-        self.mois_numeriques = {
-        'janvier': '01', 'février': '02', 'mars': '03', 'avril': '04', 'mai': '05', 'juin': '06',
-        'juillet': '07', 'août': '08', 'septembre': '09', 'octobre': '10', 'novembre': '11', 'décembre': '12'
-    }
-
-
-
-    # Fonction pour extraire, lire et afficher le contenu d'un fichier CSV :
-    def lire_fichier_csv(self):
-        try:
-            self.df = pd.read_csv(self.nom_fichier, delimiter= ';', encoding = 'Latin-1')
-            print(self.df)
-            print("\n-----Extraction réussi !-----\n")
-            return self.df
-
-        except FileNotFoundError:
-            print("Le fichier spécifié n'a pas été trouvé.")
-        except Exception as e:
-            print("Une erreur s'est produite :", e)
-
-
-    # Fonction pour découper le champ Heure - Durée :
-    def traitementDateDuree(self):
-        df_temps = self.df['Heure - Durée :']
-
-        # Création de nouvelles colonnes pour stocker les valeurs découpées
-        self.df['Jour_Semaine'] = ""
-        self.df['Date'] = ""
-        self.df['Heure'] = ""
-        self.df['Durée'] = ""
-
-        # Parcours de chaque valeur de la colonne
-        for index, ligne in enumerate(df_temps):
-            # Découper la valeur en mots en utilisant l'espace comme séparateur
-            mots = ligne.split()
-
-            # Assigner les mots aux nouvelles colonnes
-            self.df.at[index, 'Jour_Semaine'] = mots[0]
-            self.df.at[index, 'Date'] = " ".join(mots[1:4])
-            self.df.at[index, 'Heure'] = mots[4]
-            self.df.at[index, 'Durée'] = " ".join(mots[6:])
-
-        #Création d'une colonne pour avoir la date au format numérique
-        self.df['DD/MM/YYYY'] = ""
-
-        for index, ligne in enumerate(self.df['Date']):
-
-            mots = ligne.split()
-
-            if mots[1] in self.mois_numeriques:
-                mots[1] = self.mois_numeriques[mots[1]]
-
-            self.df.at[index, 'DD/MM/YYYY'] = " ".join(mots)
-
-        print("-----Test réussi-----")
-        return self.df
-
-
-
-
-
-# Appel de la fonction pour lire le fichier CSV
-
-Mon_chargement = TraitementData()
-Mon_chargement.lire_fichier_csv()
-Mon_chargement.decoupage_temporalite()
-
-
-
-
-#date_initiale = input(str("Veuillez définir la période initiale au format DD/MM/YYYY"))
-#date_finale = input(str("Veuillez définir la période finale au format DD/MM/YYYY"))
-
-
-
-
-
+GDB = GestionDB(df)
+GDB.ajoutDF()
