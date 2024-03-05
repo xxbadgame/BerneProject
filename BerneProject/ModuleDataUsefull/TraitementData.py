@@ -45,6 +45,7 @@ class TraitementData:
             # Découper la valeur en mots en utilisant l'espace comme séparateur
             mots = ligne.split()
 
+            # Le faire arriver au bon format dans le db #
             # Assigner les mots aux nouvelles colonnes
             self.df.at[index, 'Jour_Semaine'] = mots[0]
             self.df.at[index, 'Date'] = " ".join(mots[1:4])
@@ -61,7 +62,9 @@ class TraitementData:
             if mots[1] in self.mois_numeriques:
                 mots[1] = self.mois_numeriques[mots[1]]
 
-            self.df.at[index, 'DD/MM/YYYY'] = " ".join(mots)
+
+            # Le faire arriver en date dans le db #
+            self.df.at[index, 'DD/MM/YYYY'] = "/".join(mots)
 
         print("-----Test réussi-----")
         self.df.columns = [col.strip() for col in self.df.columns]
@@ -75,7 +78,7 @@ if __name__ == "__main__":
     TD = TraitementData("BerneProject/extraction-2021-2022-anonyme.csv")
     TD.lire_fichier_csv()
     df = TD.traitementDateDuree()
-    print(df.columns)
+    print(df['DD/MM/YYYY'])
 
 
 

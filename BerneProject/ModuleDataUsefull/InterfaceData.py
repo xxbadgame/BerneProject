@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from .Requetage import Requetage
+from Requetage import Requetage
 
 class InterfaceData:
     def __init__(self):
@@ -21,9 +21,26 @@ class InterfaceData:
         center_y = int(screen_height/2 - window_height / 2)
         self.window.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
         
-        self.combo_box = ttk.Combobox(self.window, width=50, values=['Analyse des prêts par domaine', 'Tendance des prêts selon le jour de la semaine', 'Durée moyenne des prêts selon le type de ressource'])
-        self.combo_box.current(0)
-        self.combo_box.pack(pady=10)
+        # Création d'un Frame pour les menus déroulants
+        self.dropdown_frame = tk.Frame(self.window)
+        self.dropdown_frame.pack(pady=10)
+
+        # Menu déroulant pour le choix du domaine
+        self.domain_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=['Aucun','Domaine1', 'Domaine2', 'Domaine3'])
+        self.domain_combobox.grid(row=0, column=0, padx=5)
+
+        # Menu déroulant pour le choix de la ressource
+        self.resource_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=['Aucun','Ressource1', 'Ressource2', 'Ressource3'])
+        self.resource_combobox.grid(row=0, column=1, padx=5)
+
+        # Menu déroulant pour l'analyse temporelle
+        self.temporal_analysis_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=['Jour', 'Semaine', 'Mois', 'Semestre', 'Année'])
+        self.temporal_analysis_combobox.grid(row=0, column=2, padx=5)
+
+        # Définir les sélections par défaut pour chaque combobox
+        self.domain_combobox.current(0)
+        self.resource_combobox.current(0)
+        self.temporal_analysis_combobox.current(0)
 
         # Emballage du bouton avant le canvas
         self.generate_button = tk.Button(self.window, text="Générer Graphique", command=self.GenerationGraphique, width=20)
