@@ -11,7 +11,7 @@ class GestionDB:
         self.conn = sqlite3.connect("BerneProject/DBBibliotheque.db")
 
     def ajoutDF(self):
-        self.df.to_sql("Biblotheque",self.conn, if_exists='replace',index=False)
+        self.df.to_sql("Bibliotheque",self.conn, if_exists='replace',index=False)
 
     def fermetureDB(self):
         self.conn.close()

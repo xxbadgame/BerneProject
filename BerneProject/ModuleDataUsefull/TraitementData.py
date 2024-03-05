@@ -2,7 +2,7 @@ import csv
 import pandas as pd
 import tkinter as tk
 import matplotlib as mpl
-
+import datetime
 
 class TraitementData:
 
@@ -23,8 +23,7 @@ class TraitementData:
     def lire_fichier_csv(self):
         try:
             self.df = pd.read_csv(self.nom_fichier, delimiter= ';', encoding = 'Latin-1')
-            self.df.columns = self.df.columns.str.strip()  
-            print(self.df.columns)       
+            self.df.columns = self.df.columns.str.strip()         
             return self.df
 
         except FileNotFoundError:
@@ -32,27 +31,24 @@ class TraitementData:
         except Exception as e:
             print("Une erreur s'est produite :", e)
     
-    def suppressionColonnes(self, ListeColonnes):
-        # ['Réservation au nom de', 'Type', 'Dernière mise à jour']
-        self.df = self.df.drop(columns=ListeColonnes)
-        return self.df
-    
     def traitementDateDuree(self):
         # Traitement de la colonne 'Heure - Durée'
         # La colonne Date
-        self.df['Date'] = self.df['Heure - Durée'].apply(lambda x: x.split(' - ')[0]).str.strip()
-        for i in range(len(self.df['Date'])):
-            partieDate = self.df['Date'].str.split(' ')
-            Jour, Mois, Annee , Heures = partieDate[i][1], partieDate[i][2], partieDate[i][3], partieDate[i][4]
-            Heures = Heures.split(':')
-
+        self.df['DateComplete'] = self.df['Heure - Durée'].apply(lambda x: x.split(' - ')[0]).str.strip()
+        # Je creéer une colonne avec la date formater pour ensuite l'envoyer dans ma BDD SQLite
+        self.df['Jour'] = self.df['DateComplete'].apply(lambda x: x.split(' ')[1]).str.strip()
+        self.df['Mois'] = self.df['DateComplete'].apply(lambda x: x.split(' ')[2]).str.strip()
+        self.df['Annee'] = self.df['DateComplete'].apply(lambda x: x.split(' ')[3]).str.strip()
+        self.df['HMS'] = self.df['DateComplete'].apply(lambda x: x.split(' ')[4]).str.strip()
+        
+        self.df['Date'] = self.df['Annee'] + '-' + self.df['Mois'].map(self.mois_numeriques) + '-' + self.df['Jour'] + ' ' + self.df['HMS']
+        self.df['Date'] = pd.to_datetime(self.df['Date'])
+        
         # La colonne Durée
         self.df['Durée'] = self.df['Heure - Durée'].apply(lambda x: x.split(' - ')[1]).str.strip()
         # Suppression de la colonne 'Heure - Durée'
-        self.df = self.df.drop(columns=['Heure - Durée'])
+        self.df = self.df.drop(columns=['Heure - Durée', 'DateComplete', 'Jour', 'Mois', 'Annee', 'HMS'])
         return self.df
-
-
     
     def get_df(self):
         return self.df

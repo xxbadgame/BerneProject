@@ -14,56 +14,32 @@ class Requetage:
         if self.conn:
             self.conn.close()
 
-    def analyse_prets_par_domaine(self):
-        """Effectue une analyse des prêts par domaine."""
+    def TauxEmpruntDansleTemps(self, debutDate, finDate, domaine):
+        """Retourne le taux d'emprunt par domaines."""
         query = """
-        SELECT Domaines, COUNT(*) AS Nombre_Prets
-        FROM Biblotheque
-        GROUP BY Domaines
-        ORDER BY Nombre_Prets DESC
+        SELECT 
+            Date(Date) AS Jour, 
+            (SUM(CASE WHEN Type = 'Emprunt ' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS TauxEmprunt
+        FROM 
+            Bibliotheque
+        WHERE
+            Date >= ? AND Date <= ? AND Domaines = ?
+        GROUP BY 
+            Jour;
         """
-        return self._execute_query(query)
-
-    def tendance_prets_selon_jour_semaine(self):
-        """Analyse la tendance des prêts selon le jour de la semaine."""
-        query = """
-        SELECT Jour_Semaine, COUNT(*) AS Nombre_Prets
-        FROM Biblotheque
-        GROUP BY Jour_Semaine
-        ORDER BY CASE Jour_Semaine
-            WHEN 'Lundi' THEN 1
-            WHEN 'Mardi' THEN 2
-            WHEN 'Mercredi' THEN 3
-            WHEN 'Jeudi' THEN 4
-            WHEN 'Vendredi' THEN 5
-            WHEN 'Samedi' THEN 6
-            WHEN 'Dimanche' THEN 7
-        END
-        """
-        return self._execute_query(query)
-
-    def duree_moyenne_prets_selon_type_ressource(self):
-        """Calcule la durée moyenne des prêts selon le type de ressource."""
-        query = """
-        SELECT Type, AVG(Durée) AS Duree_Moyenne
-        FROM Biblotheque
-        GROUP BY Type
-        """
-        return self._execute_query(query)
-
-    def _execute_query(self, query):
-        """Exécute une requête SQL et retourne les résultats."""
-        if self.conn:
-            cursor = self.conn.cursor()
-            cursor.execute(query)
-            return cursor.fetchall()
-
+        
+        cursor = self.conn.cursor()
+        cursor.execute(query, (debutDate, finDate, domaine))
+        return cursor.fetchall()
+    
+    # def testRequete(self):
+    #     query = """
+    #     SELECT DISTINCT Type FROM Bibliotheque;
+    #     """
 
 if __name__ == "__main__":
     rq = Requetage("BerneProject/DBBibliotheque.db")
     rq.connect()
-    print(rq.analyse_prets_par_domaine())
-    rq.tendance_prets_selon_jour_semaine()
-    rq.duree_moyenne_prets_selon_type_ressource()
+    print(rq.testRequete())
+    print(rq.TauxEmpruntDansleTemps())
     rq.close()
-    print("Fin de l'exécution.")

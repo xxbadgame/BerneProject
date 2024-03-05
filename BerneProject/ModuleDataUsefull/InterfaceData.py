@@ -5,7 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from .Requetage import Requetage
 
 class InterfaceData:
-    def __init__(self):
+    def __init__(self, ListeDomaines, ListeRessources):
         self.RQ = Requetage("BerneProject/DBBibliotheque.db")
         self.RQ.connect()
         self.window = tk.Tk()
@@ -13,8 +13,8 @@ class InterfaceData:
         self.fig, self.ax = plt.subplots()
         
         # Calcul pour centrer la fenêtre
-        window_width = 600
-        window_height = 400
+        window_width = 1080
+        window_height = 720
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
         center_x = int(screen_width/2 - window_width / 2)
@@ -25,22 +25,44 @@ class InterfaceData:
         self.dropdown_frame = tk.Frame(self.window)
         self.dropdown_frame.pack(pady=10)
 
-        # Menu déroulant pour le choix du domaine
-        self.domain_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=['Aucun','Domaine1', 'Domaine2', 'Domaine3'])
-        self.domain_combobox.grid(row=0, column=0, padx=5)
+        ### Domaine ###
+        
+        self.LabelDomaine = tk.Label(self.dropdown_frame, text="Domaine")
+        self.LabelDomaine.grid(row=0, column=0, padx=5)
+        
+        ListeDomaines.append('Tous')
+        self.domaines_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=ListeDomaines)
+        self.domaines_combobox.grid(row=1, column=0, padx=5)
+        
+        ### Ressource ###
+        
+        self.LabelRessource = tk.Label(self.dropdown_frame, text="Ressource")
+        self.LabelRessource.grid(row=0, column=1, padx=5)
 
-        # Menu déroulant pour le choix de la ressource
-        self.resource_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=['Aucun','Ressource1', 'Ressource2', 'Ressource3'])
-        self.resource_combobox.grid(row=0, column=1, padx=5)
+        ListeRessources.append('Tous')
+        self.resources_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=ListeRessources)
+        self.resources_combobox.grid(row=1, column=1, padx=5)
+        
+        ### Date début ###
+        
+        self.LabelDateDebut = tk.Label(self.dropdown_frame, text="Date de début (AAAA-MM-JJ)")
+        self.LabelDateDebut.grid(row=0, column=2, padx=5)
 
         # Menu déroulant pour l'analyse temporelle
-        self.temporal_analysis_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=['Jour', 'Semaine', 'Mois', 'Semestre', 'Année'])
-        self.temporal_analysis_combobox.grid(row=0, column=2, padx=5)
+        self.debutDate = ttk.Entry(self.dropdown_frame, width=20)
+        self.debutDate.grid(row=1, column=2, padx=5)
+        
+        ### Date fin ###
+        
+        self.LabelDateFin = tk.Label(self.dropdown_frame, text="Date de fin (AAAA-MM-JJ)")
+        self.LabelDateFin.grid(row=0, column=3, padx=5)
+        
+        self.finDate = ttk.Entry(self.dropdown_frame, width=20)
+        self.finDate.grid(row=1, column=3, padx=5)
 
         # Définir les sélections par défaut pour chaque combobox
-        self.domain_combobox.current(0)
-        self.resource_combobox.current(0)
-        self.temporal_analysis_combobox.current(0)
+        self.domaines_combobox.current(0)
+        self.resources_combobox.current(0)
 
         # Emballage du bouton avant le canvas
         self.generate_button = tk.Button(self.window, text="Générer Graphique", command=self.GenerationGraphique, width=20)
@@ -51,28 +73,29 @@ class InterfaceData:
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def GenerationGraphique(self):
-        selection = self.combo_box.get()
+        domaine = self.domaines_combobox.get()
+        ressource = self.resources_combobox.get()
+        dateDebut = self.debutDate.get()
+        dateFin = self.finDate.get()
         self.ax.clear()
-
-        if selection == 'Analyse des prêts par domaine':
-            data = self.RQ.analyse_prets_par_domaine()
-            domains, counts = zip(*data)
-            self.ax.bar(domains, counts)
-        elif selection == 'Tendance des prêts selon le jour de la semaine':
-            data = self.RQ.tendance_prets_selon_jour_semaine()
-            days, counts = zip(*data)
-            self.ax.bar(days, counts)
-        elif selection == 'Durée moyenne des prêts selon le type de ressource':
-            data = self.RQ.duree_moyenne_prets_selon_type_ressource()
-            types, averages = zip(*data)
-            self.ax.bar(types, averages)
-
-        self.ax.set_title(selection)
+        
+        ### Faire une courbe dans le temps pour les emprunts selon les domaines et les ressources ###
+        
+        rq = Requetage("BerneProject/DBBibliotheque.db")
+        rq.connect()
+        dataGraphique = rq.TauxEmpruntDansleTemps(dateDebut, dateFin, domaine)
+        print(dataGraphique)
+        Dates, Taux = zip(*dataGraphique)
+        self.ax.plot(Dates, Taux)
+        
+        self.ax.set_title("Taux d'emprunt par domaines")
+        self.ax.set_xlabel('Nombre de Prêts')
+        self.ax.set_ylabel('Domaines')
         self.canvas.draw()
         
     def run(self):
         self.window.mainloop()
 
 if __name__ == "__main__":
-    interface = InterfaceData()
+    interface = InterfaceData(["Domaine1", "Domaine2", "Domaine3"], ["Ressource1", "Ressource2", "Ressource3"])
     interface.run()
