@@ -4,11 +4,9 @@ from ModuleDataUsefull.InterfaceData import *
 
 TD = TraitementData("BerneProject/extraction-2021-2022-anonyme.csv")
 TD.lire_fichier_csv()
+TD.suppressionColonnes(['Réservation au nom de', 'Type', 'Dernière mise à jour'])
 df = TD.traitementDateDuree()
 
-GDB = GestionDB(df)
-GDB.connectionDB()
-GDB.ajoutDF()
+print(df)
 
-interface = InterfaceData()
-interface.run()
+

@@ -12,7 +12,10 @@ class TraitementData:
         self.mois_numeriques = {
         'janvier': '01', 'février': '02', 'mars': '03', 'avril': '04', 'mai': '05', 'juin': '06',
         'juillet': '07', 'août': '08', 'septembre': '09', 'octobre': '10', 'novembre': '11', 'décembre': '12'
-    }
+        }
+        self.jours_numeriques = {
+        'lundi': '01', 'mardi': '02', 'mercredi': '03', 'jeudi': '04', 'vendredi': '05', 'samedi': '06', 'dimanche': '07'
+        }
 
 
 
@@ -20,55 +23,36 @@ class TraitementData:
     def lire_fichier_csv(self):
         try:
             self.df = pd.read_csv(self.nom_fichier, delimiter= ';', encoding = 'Latin-1')
-            print(self.df)
-            print("\n-----Extraction réussi !-----\n")
+            self.df.columns = self.df.columns.str.strip()  
+            print(self.df.columns)       
             return self.df
 
         except FileNotFoundError:
             print("Le fichier spécifié n'a pas été trouvé.")
         except Exception as e:
             print("Une erreur s'est produite :", e)
-
-
-    # Fonction pour découper le champ Heure - Durée :
-    def traitementDateDuree(self):
-        df_temps = self.df['Heure - Durée ']
-
-        # Création de nouvelles colonnes pour stocker les valeurs découpées
-        self.df['Jour_Semaine'] = ""
-        self.df['Date'] = ""
-        self.df['Heure'] = ""
-        self.df['Durée'] = ""
-
-        # Parcours de chaque valeur de la colonne
-        for index, ligne in enumerate(df_temps):
-            # Découper la valeur en mots en utilisant l'espace comme séparateur
-            mots = ligne.split()
-
-            # Le faire arriver au bon format dans le db #
-            # Assigner les mots aux nouvelles colonnes
-            self.df.at[index, 'Jour_Semaine'] = mots[0]
-            self.df.at[index, 'Date'] = " ".join(mots[1:4])
-            self.df.at[index, 'Heure'] = mots[4]
-            self.df.at[index, 'Durée'] = " ".join(mots[6:])
-
-        #Création d'une colonne pour avoir la date au format numérique
-        self.df['DD/MM/YYYY'] = ""
-
-        for index, ligne in enumerate(self.df['Date']):
-
-            mots = ligne.split()
-
-            if mots[1] in self.mois_numeriques:
-                mots[1] = self.mois_numeriques[mots[1]]
-
-
-            # Le faire arriver en date dans le db #
-            self.df.at[index, 'DD/MM/YYYY'] = "/".join(mots)
-
-        print("-----Test réussi-----")
-        self.df.columns = [col.strip() for col in self.df.columns]
+    
+    def suppressionColonnes(self, ListeColonnes):
+        # ['Réservation au nom de', 'Type', 'Dernière mise à jour']
+        self.df = self.df.drop(columns=ListeColonnes)
         return self.df
+    
+    def traitementDateDuree(self):
+        # Traitement de la colonne 'Heure - Durée'
+        # La colonne Date
+        self.df['Date'] = self.df['Heure - Durée'].apply(lambda x: x.split(' - ')[0]).str.strip()
+        for i in range(len(self.df['Date'])):
+            partieDate = self.df['Date'].str.split(' ')
+            Jour, Mois, Annee , Heures = partieDate[i][1], partieDate[i][2], partieDate[i][3], partieDate[i][4]
+            Heures = Heures.split(':')
+
+        # La colonne Durée
+        self.df['Durée'] = self.df['Heure - Durée'].apply(lambda x: x.split(' - ')[1]).str.strip()
+        # Suppression de la colonne 'Heure - Durée'
+        self.df = self.df.drop(columns=['Heure - Durée'])
+        return self.df
+
+
     
     def get_df(self):
         return self.df
@@ -78,7 +62,6 @@ if __name__ == "__main__":
     TD = TraitementData("BerneProject/extraction-2021-2022-anonyme.csv")
     TD.lire_fichier_csv()
     df = TD.traitementDateDuree()
-    print(df['DD/MM/YYYY'])
 
 
 

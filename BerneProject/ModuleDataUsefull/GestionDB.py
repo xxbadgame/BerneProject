@@ -17,5 +17,9 @@ class GestionDB:
         self.conn.close()
 
 
+if __name__ == "__main__":
+    pass
+
+
 
 
