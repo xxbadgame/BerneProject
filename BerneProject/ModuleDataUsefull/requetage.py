@@ -14,7 +14,7 @@ class Requetage:
         if self.conn:
             self.conn.close()
 
-    def TauxEmpruntDansleTemps(self, debutDate, finDate, domaine):
+    def TauxEmpruntDansleTemps(self, debutDate, finDate, domaine, ressource):
         """Retourne le taux d'emprunt par domaines."""
         query = """
         SELECT 
@@ -23,14 +23,23 @@ class Requetage:
         FROM 
             Bibliotheque
         WHERE
-            Date >= ? AND Date <= ? AND Domaines = ?
+            Date >= ? AND Date <= ? AND Domaines = ? AND Ressource = ?
         GROUP BY 
             Jour;
         """
-        
         cursor = self.conn.cursor()
-        cursor.execute(query, (debutDate, finDate, domaine))
+        cursor.execute(query, (debutDate, finDate, domaine, ressource))
         return cursor.fetchall()
+    
+    def DomainesUniques(self):
+        """Retourne les domaines."""
+        query = """
+        SELECT DISTINCT Domaines FROM Bibliotheque;
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        return cursor.fetchall()
+    
     
     # def testRequete(self):
     #     query = """

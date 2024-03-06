@@ -30,7 +30,6 @@ class InterfaceData:
         self.LabelDomaine = tk.Label(self.dropdown_frame, text="Domaine")
         self.LabelDomaine.grid(row=0, column=0, padx=5)
         
-        ListeDomaines.append('Tous')
         self.domaines_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=ListeDomaines)
         self.domaines_combobox.grid(row=1, column=0, padx=5)
         
@@ -39,7 +38,6 @@ class InterfaceData:
         self.LabelRessource = tk.Label(self.dropdown_frame, text="Ressource")
         self.LabelRessource.grid(row=0, column=1, padx=5)
 
-        ListeRessources.append('Tous')
         self.resources_combobox = ttk.Combobox(self.dropdown_frame, width=20, values=ListeRessources)
         self.resources_combobox.grid(row=1, column=1, padx=5)
         
@@ -73,24 +71,36 @@ class InterfaceData:
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def GenerationGraphique(self):
-        domaine = self.domaines_combobox.get()
+        rq = Requetage("BerneProject/DBBibliotheque.db")
+        rq.connect()
+        
+        domaine = self.domaines_combobox.get()        
         ressource = self.resources_combobox.get()
         dateDebut = self.debutDate.get()
         dateFin = self.finDate.get()
+        if dateDebut < "2021-09-01" or dateFin > "2022-06-01":
+            # Afficher un message d'erreur
+            self.LabelError = tk.Label(self.dropdown_frame, text="Date invalide", fg="red")
+            self.LabelError.grid(row=2, column=0, columnspan=4)
+        
         self.ax.clear()
         
         ### Faire une courbe dans le temps pour les emprunts selon les domaines et les ressources ###
         
-        rq = Requetage("BerneProject/DBBibliotheque.db")
-        rq.connect()
-        dataGraphique = rq.TauxEmpruntDansleTemps(dateDebut, dateFin, domaine)
-        print(dataGraphique)
-        Dates, Taux = zip(*dataGraphique)
-        self.ax.plot(Dates, Taux)
+        try:
+            if hasattr(self, 'LabelError'):
+                self.LabelError.destroy()
+    
+            dataGraphique = rq.TauxEmpruntDansleTemps(dateDebut, dateFin, domaine, ressource)
+            Dates, Taux = zip(*dataGraphique)
+            self.ax.plot(Dates, Taux)
+        except ValueError:
+            self.LabelError = tk.Label(self.dropdown_frame, text="Pas de prets pour cette période", fg="red")
+            self.LabelError.grid(row=2, column=0, columnspan=4)
         
         self.ax.set_title("Taux d'emprunt par domaines")
-        self.ax.set_xlabel('Nombre de Prêts')
-        self.ax.set_ylabel('Domaines')
+        self.ax.set_xlabel('Jours')
+        self.ax.set_ylabel('Taux de prêt (%)')
         self.canvas.draw()
         
     def run(self):
